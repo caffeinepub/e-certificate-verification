@@ -32,51 +32,55 @@ actor {
 
   var nextCertificateId : CertificateId = 0;
   let certificates = Map.empty<CertificateId, Certificate>();
+  let certIdByNumber = Map.empty<Text, CertificateId>();
   let userProfiles = Map.empty<Principal, UserProfile>();
 
   // User Profile Functions
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Login required");
     };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Login required");
     };
     userProfiles.get(user);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Login required");
     };
     userProfiles.add(caller, profile);
   };
 
-  // Admin Only: Create certificate
+  // Authenticated users: Create certificate
   public shared ({ caller }) func createCertificate(certificateData : Certificate) : async CertificateId {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create certificates");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Login required to create certificates");
     };
 
     let id = nextCertificateId;
     nextCertificateId += 1;
     certificates.add(id, certificateData);
+    certIdByNumber.add(certificateData.certificateNumber, id);
     id;
   };
 
-  // Admin Only: Update certificate
+  // Authenticated users: Update certificate
   public shared ({ caller }) func updateCertificate(id : CertificateId, certificateData : Certificate) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update certificates");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Login required to update certificates");
     };
 
     switch (certificates.get(id)) {
-      case (?_) {
+      case (?_existing) {
+        // Overwrite certificate and update number->id mapping
         certificates.add(id, certificateData);
+        certIdByNumber.add(certificateData.certificateNumber, id);
       };
       case (null) {
         Runtime.trap("Certificate not found");
@@ -84,7 +88,7 @@ actor {
     };
   };
 
-  // Anyone: Query certificate (no authentication required)
+  // Anyone: Query certificate by numeric ID
   public query func getCertificate(id : CertificateId) : async Certificate {
     switch (certificates.get(id)) {
       case (?certificate) { certificate };
@@ -94,12 +98,26 @@ actor {
     };
   };
 
-  // Admin Only: List all certificates
-  public query ({ caller }) func listCertificates() : async [Certificate] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can list certificates");
+  // Anyone: Query certificate by certificate number string
+  public query func getCertificateByNumber(certNumber : Text) : async Certificate {
+    switch (certIdByNumber.get(certNumber)) {
+      case (?id) {
+        switch (certificates.get(id)) {
+          case (?certificate) { certificate };
+          case (null) { Runtime.trap("Certificate not found") };
+        };
+      };
+      case (null) {
+        Runtime.trap("Certificate number not found");
+      };
     };
+  };
 
+  // Authenticated users: List all certificates
+  public query ({ caller }) func listCertificates() : async [Certificate] {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Login required to list certificates");
+    };
     certificates.values().toArray();
   };
 };

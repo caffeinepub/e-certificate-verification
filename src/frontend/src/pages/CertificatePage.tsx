@@ -9,19 +9,6 @@ import SiteHeader from "../components/SiteHeader";
 import { useActor } from "../hooks/useActor";
 import { useQrCode } from "../hooks/useQrCode";
 
-const SAMPLE_CERT: Certificate = {
-  traineeName: "Rajesh Kumar Sharma",
-  fatherName: "Ramesh Lal Sharma",
-  instituteName: "Government Industrial Training Institute",
-  instituteAddress: "Sector 12, Dwarka, New Delhi - 110078",
-  trade: "Electrician",
-  trainingStartDate: "01/04/2023",
-  trainingEndDate: "31/03/2024",
-  certified: true,
-  certificateIssueDate: "15/06/2024",
-  certificateNumber: "NCVT/2024/001",
-};
-
 export default function CertificatePage() {
   const { id } = useParams({ from: "/certificate/$id" });
   const certNumber = decodeURIComponent(id);
@@ -36,13 +23,11 @@ export default function CertificatePage() {
     queryKey: ["certificate-by-number", certNumber],
     queryFn: async () => {
       if (!actor) return null;
-      // Try to list and find by certificate number
-      const list = await actor.listCertificates();
-      const found = list.find((c) => c.certificateNumber === certNumber);
-      if (found) return found;
-      // Fallback: show sample if matches demo number
-      if (certNumber === "NCVT/2024/001") return SAMPLE_CERT;
-      return null;
+      try {
+        return await actor.getCertificateByNumber(certNumber);
+      } catch {
+        return null;
+      }
     },
     enabled: !!actor && !actorFetching,
   });

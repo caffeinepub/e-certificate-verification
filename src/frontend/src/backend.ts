@@ -117,6 +117,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCertificate(id: CertificateId): Promise<Certificate>;
+    getCertificateByNumber(certNumber: string): Promise<Certificate>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     listCertificates(): Promise<Array<Certificate>>;
@@ -207,6 +208,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getCertificate(arg0);
+            return result;
+        }
+    }
+    async getCertificateByNumber(arg0: string): Promise<Certificate> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCertificateByNumber(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCertificateByNumber(arg0);
             return result;
         }
     }

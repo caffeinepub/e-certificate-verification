@@ -35,6 +35,7 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCertificate' : IDL.Func([CertificateId], [Certificate], ['query']),
+  'getCertificateByNumber' : IDL.Func([IDL.Text], [Certificate], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -76,6 +77,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCertificate' : IDL.Func([CertificateId], [Certificate], ['query']),
+    'getCertificateByNumber' : IDL.Func([IDL.Text], [Certificate], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

@@ -34,6 +34,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCertificate' : ActorMethod<[CertificateId], Certificate>,
+  'getCertificateByNumber' : ActorMethod<[string], Certificate>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listCertificates' : ActorMethod<[], Array<Certificate>>,

@@ -34,6 +34,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCertificate(id: CertificateId): Promise<Certificate>;
+    getCertificateByNumber(certNumber: string): Promise<Certificate>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     listCertificates(): Promise<Array<Certificate>>;
